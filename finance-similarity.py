@@ -34,7 +34,7 @@ from pyspark.sql import SQLContext, HiveContext, Row
 from pyspark.storagelevel import StorageLevel
 from pyspark.streaming import StreamingContext
 
-import DataAPI
+import market_api
 
 ############################################
 ## Load Local Config File
@@ -63,27 +63,20 @@ print sc_conf.getAll()
 try:
     sc.stop()
     sc = SparkContext(conf=sc_conf)
-    ssc = StreamingContext(sc, 1)
 except:
     sc = SparkContext(conf=sc_conf)
-    ssc = StreamingContext(sc, 1)
 
 
 # ### 数据准备
 # - 历史上证指数分钟线数据 ：`hdfs://10.21.208.21:8020/user/mercury/minute_bar`
 
 def minute_bar_today(trade_date, pre_trade_date, ticker="000001.XSHG"):
-    pre_close = DataAPI.MktIdxdGet(tradeDate=pre_trade_date.replace('-', ''), ticker=ticker[:6], field=u"closeIndex").closeIndex.loc[0]
-    df = DataAPI.MktBarRTIntraDayGet(securityID=ticker, startTime=u"", endTime=u"", unit=u"",pandas="1")
+    pre_close = market_api.MktIdxdGet(tradeDate=pre_trade_date.replace('-', ''), ticker=ticker[:6], field=u"closeIndex").closeIndex.loc[0]
+    df = market_api.MktBarRTIntraDayGet(securityID=ticker, startTime=u"", endTime=u"", unit=u"",pandas="1")
     df['ratio'] = df.closePrice / pre_close - 1
     
     return df[['ticker', 'barTime', 'closePrice', 'ratio']]
 
-
-# ### 加载，分发数据
-rdd_history = sc.wholeTextFiles('hdfs://10.21.208.21:8020/user/mercury/minute_bar', minPartitions=80)  \
-                .setName('index_minute_bar')       \
-                .cache()
 
 # ### 相似度算法
 def cal_minute_bar_similarity(line_data):
@@ -196,25 +189,38 @@ def draw_similarity(df_today, similarity_data, minute_bar_length=90):
 
     fig = ax.get_figure()
     fig.savefig(LOCAL_STORE_PATH + '/plot-{}.png'.format(current_time))
-    
 
 
-for i in range(10):
-    print '###Start Prediction on {} ...'.format(time.ctime())
 
-    df_today = minute_bar_today('20160712', '20160711', ticker="000001.XSHG") 
-    df_today_share = sc.broadcast(df_today)
-    today_length = len(df_today)
-    today_length_share = sc.broadcast(today_length)
-    
-    ### do the calculation
-    rdd_similarity = rdd_history.map(cal_minute_bar_similarity).setName("similariy")                               .cache()
-    res_df = build_similarity_report(rdd_similarity)
-    similarity_data = get_similarity_data(res_df, 40)
-    res = draw_similarity(df_today, similarity_data, minute_bar_length=today_length_share.value)
-    
-    print '###Done Prediction on {} ...'.format(time.ctime())
-    time.sleep(65)
+def pipeline():
+    now = dt.datetime.now()
+    bar_time = '{}:{}'.format(now.hour, now.minute)
+    print '###Loat history data {} ...'.format(time.ctime())
+    # ### 加载，分发数据
+    rdd_history = sc.wholeTextFiles('hdfs://10.21.208.21:8020/user/mercury/minute_bar', minPartitions=80)  \
+                    .setName('index_minute_bar')       \
+                    .cache()
+
+    while bar_time < '15:00':
+        print '###Start Prediction on {} ...'.format(time.ctime())
+
+        df_today = minute_bar_today('20160712', '20160711', ticker="000001.XSHG") 
+        df_today_share = sc.broadcast(df_today)
+        today_length = len(df_today)
+        today_length_share = sc.broadcast(today_length)
+
+        ### do the calculation
+        rdd_similarity = rdd_history.map(cal_minute_bar_similarity).setName("similariy")                               .cache()
+        res_df = build_similarity_report(rdd_similarity)
+        similarity_data = get_similarity_data(res_df, 40)
+        res = draw_similarity(df_today, similarity_data, minute_bar_length=today_length_share.value)
+        
+        print '###Done Prediction on {} ...'.format(time.ctime())
+        time.sleep(65)
+
+    sc.stop()
 
 
-sc.stop()
+if __name__ == '__main__':
+    pipeline()
+
