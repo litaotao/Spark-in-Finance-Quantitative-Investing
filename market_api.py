@@ -18,7 +18,7 @@ def MktIdxdGet(ticker, tradeDate='20160701'):
     return pre_close
 
 
-def MktBarRTIntraDayGet(ticker)    
+def MktBarRTIntraDayGet(ticker):    
     try:    
         df = DataAPI.MktBarRTIntraDayGet(securityID=ticker)
     except:

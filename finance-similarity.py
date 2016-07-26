@@ -44,7 +44,7 @@ cfg = ConfigParser.ConfigParser()
 cfg.read("config.cfg")
 
 SPARK_MASTER = cfg.get('spark', 'master')
-LOCAL_STORE_PATH = "/Users/chenshan/Desktop/tmp"
+LOCAL_STORE_PATH = "/logs"
 
 
 ############################################
@@ -205,7 +205,8 @@ def pipeline():
         print '###Start Prediction on {} ...'.format(time.ctime())
 
         df_today = minute_bar_today('20160712', '20160711', ticker="000001.XSHG") 
-        df_today_share = sc.broadcast(df_today)
+        # df_today_share = sc.broadcast(df_today)
+        df_today_share = sc.broadcast(120)
         today_length = len(df_today)
         today_length_share = sc.broadcast(today_length)
 
