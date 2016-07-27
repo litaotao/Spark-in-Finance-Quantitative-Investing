@@ -44,7 +44,7 @@ cfg = ConfigParser.ConfigParser()
 cfg.read("config.cfg")
 
 SPARK_MASTER = cfg.get('spark', 'master')
-LOCAL_STORE_PATH = "/logs"
+LOCAL_STORE_PATH = "./logs"
 
 
 ############################################
@@ -70,9 +70,13 @@ except:
 # ### 数据准备
 # - 历史上证指数分钟线数据 ：`hdfs://10.21.208.21:8020/user/mercury/minute_bar`
 
+df_today_share = None
+today_length_share = None
+rdd_history = None
+
 def minute_bar_today(trade_date, pre_trade_date, ticker="000001.XSHG"):
-    pre_close = market_api.MktIdxdGet(tradeDate=pre_trade_date.replace('-', ''), ticker=ticker[:6], field=u"closeIndex").closeIndex.loc[0]
-    df = market_api.MktBarRTIntraDayGet(securityID=ticker, startTime=u"", endTime=u"", unit=u"",pandas="1")
+    pre_close = market_api.MktIdxdGet(tradeDate=pre_trade_date.replace('-', ''), ticker=ticker[:6])
+    df = market_api.MktBarRTIntraDayGet(ticker=ticker)
     df['ratio'] = df.closePrice / pre_close - 1
     
     return df[['ticker', 'barTime', 'closePrice', 'ratio']]
@@ -165,11 +169,11 @@ def draw_similarity(df_today, similarity_data, minute_bar_length=90):
     
     res['fitting'] = res[columns].sum(axis=1) / len(columns)
     res.sort(columns=['minute'], ascending=True, inplace=True)
-    res['today_line'] = list(df_today['ratio']) + [0] * (241 - len(df_today))
+    res['today_line'] = list(df_today['ratio']) + [None] * (241 - len(df_today))
     
     ### plot 
     ax = res.plot(x='minute', y=columns, figsize=(20, 13), legend=False, title=u'Minute Bar Prediction')
-    res.plot(y=['today_line'], ax=ax, linewidth=5, style='*b')
+    res.plot(y=['today_line'], ax=ax, linewidth=5, style='b')
     res.plot(y=['fitting'], ax=ax, linewidth=4, style='-y')
     ax.vlines(x=minute_bar_length, ymin=-0.02, ymax=0.02, linestyles='dashed')
     ax.set_axis_bgcolor('white')
@@ -193,6 +197,10 @@ def draw_similarity(df_today, similarity_data, minute_bar_length=90):
 
 
 def pipeline():
+    global df_today_share
+    global today_length_share
+    global rdd_history
+
     now = dt.datetime.now()
     bar_time = '{}:{}'.format(now.hour, now.minute)
     print '###Loat history data {} ...'.format(time.ctime())
@@ -204,9 +212,9 @@ def pipeline():
     while bar_time < '15:00':
         print '###Start Prediction on {} ...'.format(time.ctime())
 
-        df_today = minute_bar_today('20160712', '20160711', ticker="000001.XSHG") 
-        # df_today_share = sc.broadcast(df_today)
-        df_today_share = sc.broadcast(120)
+        df_today = minute_bar_today('20160727', '20160726', ticker="000001.XSHG") 
+        df_today_share = sc.broadcast(df_today)
+        # df_today_share = sc.broadcast(120)
         today_length = len(df_today)
         today_length_share = sc.broadcast(today_length)
 
@@ -218,7 +226,9 @@ def pipeline():
         
         print '###Done Prediction on {} ...'.format(time.ctime())
         time.sleep(65)
-
+        now = dt.datetime.now()
+        bar_time = '{}:{}'.format(now.hour, now.minute)
+        
     sc.stop()
 
 
