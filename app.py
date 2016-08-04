@@ -17,7 +17,7 @@ api = Api(app)
 
 
 def get_line_data():
-    _dict = json.load(file('logs/data-2016-07-15T13-02-13.json', 'r'))
+    _dict = json.load(file('logs/data-2016-08-04T13-03-18.json', 'r'))
     df = pd.DataFrame.from_dict(_dict)
 
     return df

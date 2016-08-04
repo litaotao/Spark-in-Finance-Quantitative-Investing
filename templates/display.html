@@ -2,110 +2,15 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="refresh" content="35"> 
     <title>ECharts</title>
     <!-- 引入 echarts.js -->
     <script type="text/javascript" src="../static/js/echarts.min.js"></script>
 </head>
 <body>
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-    <div id="main" style="width: 1400px; height:800px;"></div>
-    <script type="text/javascript">
-        // 基于准备好的dom，初始化echarts实例
-        var myChart = echarts.init(document.getElementById('main'));
-
-        // 指定图表的配置项和数据
-        option = {
-    
-    title : {
-        text: '实时指数相似度',
-        subtext: '数据来自通联数据股份公司',
-        x: 'center',
-        align: 'right'
-    },
-    
-    toolbox: {
-        feature: {
-            dataZoom: {
-                yAxisIndex: 'none'
-            },
-            restore: {},
-            saveAsImage: {}
-        }
-    },
-    
-    tooltip : {
-        trigger: 'axis',
-        axisPointer: {
-            animation: true
-        }
-    },
-    
-    xAxis : [
-        {
-            type : 'category',
-            data : {{barTime | safe}},
-        }
-    ],
-    yAxis: [
-        {
-            name: '涨跌幅',
-            type: 'value'
-        }
-    ],
-    series: [
-        {
-            name:'涨跌幅1',
-            type:'line',
-            animation: true,
-            areaStyle: {
-                normal: {
-                    color: "rgba(256, 0, 0, 0.1)",
-                }
-            },
-            lineStyle: {
-                normal: {
-                    width: 1
-                }
-            },
-            data: {{change_1}}
-        },
-        {
-            name:'涨跌幅2',
-            type:'line',
-            animation: true,
-            areaStyle: {
-                normal: {
-                    color: "rgba(256, 0, 0, 0.1)",
-                }
-            },
-            lineStyle: {
-                normal: {
-                    width: 1
-                }
-            },
-            data: {{change_2}}
-        },
-        {
-            name:'涨跌幅3',
-            type:'line',
-            animation: true,
-            areaStyle: {
-                normal: {
-                    color: "rgba(256, 0, 0, 0.1)",
-                }
-            },
-            lineStyle: {
-                normal: {
-                    width: 1
-                }
-            },
-            data: {{change_3}}
-        },
-    ]
-};
-
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(option);
-    </script>
+    <div id="main">
+        <img src="../logs/latest.png" style="width: 80%">
+    </div>
 </body>
 </html>

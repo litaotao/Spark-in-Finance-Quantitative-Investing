@@ -193,7 +193,7 @@ def draw_similarity(df_today, similarity_data, minute_bar_length=90):
 
     fig = ax.get_figure()
     fig.savefig(LOCAL_STORE_PATH + '/plot-{}.png'.format(current_time))
-
+    fig.savefig(LOCAL_STORE_PATH + '/latest.png'.format(current_time))
 
 
 def pipeline():
@@ -212,7 +212,7 @@ def pipeline():
     while bar_time < '15:00':
         print '###Start Prediction on {} ...'.format(time.ctime())
 
-        df_today = minute_bar_today('20160727', '20160726', ticker="000001.XSHG") 
+        df_today = minute_bar_today('20160804', '20160803', ticker="000001.XSHG") 
         df_today_share = sc.broadcast(df_today)
         # df_today_share = sc.broadcast(120)
         today_length = len(df_today)
