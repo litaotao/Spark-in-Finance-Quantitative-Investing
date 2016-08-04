@@ -190,6 +190,7 @@ def draw_similarity(df_today, similarity_data, minute_bar_length=90):
     ### store data on dist
     current_time = dt.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     res.to_json(LOCAL_STORE_PATH + '/data-{}.json'.format(current_time))
+    res.to_json(LOCAL_STORE_PATH + '/latest.json'.format(current_time))
 
     fig = ax.get_figure()
     fig.savefig(LOCAL_STORE_PATH + '/plot-{}.png'.format(current_time))
