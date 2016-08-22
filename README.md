@@ -9,6 +9,15 @@ This is a module in some financial investment startegies. Through analysing the 
 ![index_trend.png](docs/index_trend.png)
 
 
+### Screenshot
+
+`similarity line and predict trend`
+![similarity.png](docs/similarity.png)
+
+`prediction close index`
+![fitting.png](docs/fitting.png)
+
+
 ## Architecture
 
 Bellow is the brief indroduction of this app:

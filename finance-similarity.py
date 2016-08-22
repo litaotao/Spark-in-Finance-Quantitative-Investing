@@ -28,8 +28,6 @@ import numpy as np
 import scipy as sp
 import seaborn
 
-sys.path.append('/Users/chenshan/google_driver/github/ipython-notebook-spark/spark-1.6.0-bin-cdh4/spark-1.6.0-bin-cdh4/python/')
-sys.path.append('/Users/chenshan/google_driver/github/ipython-notebook-spark/spark-1.6.0-bin-cdh4/spark-1.6.0-bin-cdh4/python/lib/py4j-0.9-src.zip')
 import pyspark
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext, HiveContext, Row
@@ -76,17 +74,11 @@ df_today_share = None
 today_length_share = None
 rdd_history = None
 
-def minute_bar_today(trade_date, pre_trade_date, ticker="000001.XSHG", demo=True):
-    if demo:
-        pre_close = market_api.MktIdxdGetDemo(tradeDate=pre_trade_date.replace('-', ''), ticker=ticker[:6])
-        df = market_api.MktBarRTIntraDayGetDemo(ticker=ticker)
-        df['ratio'] = df.closePrice / pre_close - 1
+def minute_bar_today(trade_date, pre_trade_date, ticker="000001.XSHG"):
+    pre_close = market_api.MktIdxdGet(tradeDate=pre_trade_date.replace('-', ''), ticker=ticker[:6])
+    df = market_api.MktBarRTIntraDayGet(ticker=ticker)
+    df['ratio'] = df.closePrice / pre_close - 1
     
-    else:
-        pre_close = market_api.MktIdxdGet(tradeDate=pre_trade_date.replace('-', ''), ticker=ticker[:6])
-        df = market_api.MktBarRTIntraDayGet(ticker=ticker)
-        df['ratio'] = df.closePrice / pre_close - 1
-        
     return df[['ticker', 'barTime', 'closePrice', 'ratio']]
 
 
@@ -107,9 +99,6 @@ def cal_minute_bar_similarity(line_data):
         [diff_square, diff_var, (line_path)]
         [diff_square_normalized, diff_var_normalized, (line_path)]
     """
-    global df_today_share
-    global today_length_share
-
     tmp = pd.DataFrame()
     
     import sklearn.preprocessing
@@ -224,7 +213,7 @@ def pipeline():
     while bar_time < '15:00':
         print '###Start Prediction on {} ...'.format(time.ctime())
 
-        df_today = minute_bar_today('20160815', '20160812', ticker="000001.XSHG", demo=True) 
+        df_today = minute_bar_today('20160804', '20160803', ticker="000001.XSHG") 
         df_today_share = sc.broadcast(df_today)
         # df_today_share = sc.broadcast(120)
         today_length = len(df_today)
