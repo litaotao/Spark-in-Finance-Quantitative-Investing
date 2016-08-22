@@ -6,16 +6,18 @@
 
 This is a module in some financial investment startegies. Through analysing the trend of index, we can build some macro timing or portifolio adjustment signals.
 
-![index_trend.png](docs/index_trend.png)
+![index_trend.png](https://raw.githubusercontent.com/litaotao/Spark-in-Finance-Quantitative-Investing/master/docs/index_trend.png)
 
 
 ### Screenshot
 
 `similarity line and predict trend`
-![similarity.png](docs/similarity.png)
+
+![similarity.png](https://raw.githubusercontent.com/litaotao/Spark-in-Finance-Quantitative-Investing/master/docs/similarity.png)
 
 `prediction close index`
-![fitting.png](docs/fitting.png)
+
+![fitting.png](https://raw.githubusercontent.com/litaotao/Spark-in-Finance-Quantitative-Investing/master/docs/fitting.png)
 
 
 ## Architecture
@@ -30,7 +32,7 @@ Bellow is the brief indroduction of this app:
     - Dirver collects the calculation results;
     - Dirver parse the calculation results;
 
-![architecture.png](docs/architecture.png)
+![architecture.png](https://raw.githubusercontent.com/litaotao/Spark-in-Finance-Quantitative-Investing/master/docs/architecture.png)
 
 
 ## Data Used
@@ -81,5 +83,7 @@ This application, ***Spark-in-Finance-Quantitative-Investing***, is just a demo,
 
 [Spark-in-Finance-Quantitative-Investing](https://github.com/litaotao/Spark-in-Finance-Quantitative-Investing)
 
-## Video Demo
+## Video & Documents
+
+- [Spark-in-Finance-Quantitative-Investing.pdf](https://raw.githubusercontent.com/litaotao/Spark-in-Finance-Quantitative-Investing/master/docs/Spark-in-Finance-Quantitative-Investing.pdf)
 
