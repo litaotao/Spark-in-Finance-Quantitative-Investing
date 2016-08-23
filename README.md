@@ -86,4 +86,5 @@ This application, ***Spark-in-Finance-Quantitative-Investing***, is just a demo,
 ## Video & Documents
 
 - [Spark-in-Finance-Quantitative-Investing.pdf](https://raw.githubusercontent.com/litaotao/Spark-in-Finance-Quantitative-Investing/master/docs/Spark-in-Finance-Quantitative-Investing.pdf)
-
+- [Video Demo - En](https://www.youtube.com/watch?v=WPc-DoSeCpU&feature=youtu.be)
+- [Video Demo - Cn](http://v.youku.com/v_show/id_XMTY5NjA2ODY2OA==.html?beta&)
