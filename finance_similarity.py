@@ -8,6 +8,10 @@
 # built-in package
 import os
 import sys
+
+sys.path.append('/Users/chenshan/google_driver/github/ipython-notebook-spark/spark-1.6.0-bin-cdh4/spark-1.6.0-bin-cdh4/python')
+sys.path.append('/Users/chenshan/google_driver/github/ipython-notebook-spark/spark-1.6.0-bin-cdh4/spark-1.6.0-bin-cdh4/python/lib/py4j-0.9-src.zip')
+
 import json
 import time
 import socket
@@ -36,47 +40,47 @@ from pyspark.streaming import StreamingContext
 
 import market_api
 
-############################################
-## Load Local Config File
-############################################
 
-cfg = ConfigParser.ConfigParser()
-cfg.read("config.cfg")
-
-SPARK_MASTER = cfg.get('spark', 'master')
 LOCAL_STORE_PATH = "./logs"
+APP_STORE_PATH = "./static"
 
-
-############################################
-## Load Local Config File and Initialized SparkContext
-############################################
-
-sc_conf = SparkConf()
-sc_conf.setAppName("finance-similarity-app")
-sc_conf.setMaster(SPARK_MASTER)
-sc_conf.set('spark.executor.memory', '2g')
-sc_conf.set('spark.executor.cores', '4')
-sc_conf.set('spark.cores.max', '40')
-sc_conf.set('spark.logConf', True)
-print sc_conf.getAll()
-
-try:
-    sc.stop()
-    sc = SparkContext(conf=sc_conf)
-except:
-    sc = SparkContext(conf=sc_conf)
-
-
-# ### 数据准备
-# - 历史上证指数分钟线数据 ：`hdfs://10.21.208.21:8020/user/mercury/minute_bar`
 
 df_today_share = None
 today_length_share = None
 rdd_history = None
 
+
+def create_sc():
+    sc_conf = SparkConf()
+    sc_conf.setAppName("finance-similarity-app")
+    sc_conf.setMaster('spark://10.21.208.21:7077')
+    sc_conf.set('spark.executor.memory', '2g')
+    sc_conf.set('spark.executor.cores', '4')
+    sc_conf.set('spark.cores.max', '40')
+    sc_conf.set('spark.logConf', True)
+    print sc_conf.getAll()
+
+    sc = None
+    try:
+        sc.stop()
+        sc = SparkContext(conf=sc_conf)
+    except:
+        sc = SparkContext(conf=sc_conf)
+
+    return sc
+
+
 def minute_bar_today(trade_date, pre_trade_date, ticker="000001.XSHG"):
     pre_close = market_api.MktIdxdGet(tradeDate=pre_trade_date.replace('-', ''), ticker=ticker[:6])
     df = market_api.MktBarRTIntraDayGet(ticker=ticker)
+    df['ratio'] = df.closePrice / pre_close - 1
+    
+    return df[['ticker', 'barTime', 'closePrice', 'ratio']]
+
+
+def minute_bar_today_demo(trade_date, pre_trade_date, ticker="000001.XSHG"):
+    pre_close = market_api.MktIdxdGetDemo(tradeDate=pre_trade_date.replace('-', ''), ticker=ticker[:6])
+    df = market_api.MktBarRTIntraDayGetDemo(ticker=ticker)
     df['ratio'] = df.closePrice / pre_close - 1
     
     return df[['ticker', 'barTime', 'closePrice', 'ratio']]
@@ -104,9 +108,10 @@ def cal_minute_bar_similarity(line_data):
     import sklearn.preprocessing
     scaler = sklearn.preprocessing.MinMaxScaler()
     
-    today_data = df_today_share.value
+    today_data = pd.DataFrame.from_dict(json.loads(df_today_share.value))
     today_data_length = today_length_share.value
     line_path, line_df = line_data
+
     line_df = pd.DataFrame.from_dict(json.loads(line_df))
     line_df.sort(columns=['barTime'], ascending=True, inplace=True)
     
@@ -155,6 +160,7 @@ def get_similarity_data(similarity, number=50):
 
 def draw_similarity(df_today, similarity_data, minute_bar_length=90):
     res = pd.DataFrame()
+    df_today = pd.DataFrame.from_dict(json.loads(df_today))
     
     columns = []
     for line_tuple in similarity_data:
@@ -195,6 +201,7 @@ def draw_similarity(df_today, similarity_data, minute_bar_length=90):
     fig = ax.get_figure()
     fig.savefig(LOCAL_STORE_PATH + '/plot-{}.png'.format(current_time))
     fig.savefig(LOCAL_STORE_PATH + '/latest.png'.format(current_time))
+    fig.savefig(APP_STORE_PATH + '/latest.png'.format(current_time))
 
 
 def pipeline():
@@ -233,6 +240,44 @@ def pipeline():
     sc.stop()
 
 
+def demo():
+    global df_today_share
+    global today_length_share
+    global rdd_history
+
+    print '###Loat history data {} ...'.format(time.ctime())
+    ### 创建 sc 
+    sc = create_sc()
+
+    ### 加载，分发数据
+    rdd_history = sc.wholeTextFiles('hdfs://10.21.208.21:8020/user/mercury/minute_bar', minPartitions=80)  \
+                    .setName('index_minute_bar')       \
+                    .cache()
+
+    today_length = 120
+
+    while today_length < 241:
+        print '###Start Prediction on ...'.format()
+
+        df_today = minute_bar_today_demo('20160702', '20160701', ticker="000001.XSHG") 
+        df_today = df_today[: today_length].to_json()
+        df_today_share = sc.broadcast(df_today)
+        today_length_share = sc.broadcast(today_length)
+
+        ### do the calculation
+        rdd_similarity = rdd_history.map(cal_minute_bar_similarity).setName("similariy").cache()
+
+        res_df = build_similarity_report(rdd_similarity)
+        similarity_data = get_similarity_data(res_df, 40)
+        res = draw_similarity(df_today, similarity_data, minute_bar_length=today_length_share.value)
+        
+        print '###Done Prediction on  ...'.format()
+        time.sleep(65)
+        today_length += 1
+        
+    sc.stop()
+
+
 if __name__ == '__main__':
-    pipeline()
+    demo()
 

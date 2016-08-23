@@ -30,13 +30,4 @@ def MktIdxdGetDemo(ticker, tradeDate='20160701'):
 
 def MktBarRTIntraDayGetDemo(ticker):    
     df = pd.DataFrame.from_csv("000001-20160702.csv")
-    now = dt.datetime.now()
-    bar_time = '{}:{}'.format(now.hour, now.minute)
-    while bar_time not in df.barTime:
-        time.sleep(65)
-        now = dt.datetime.now()
-        bar_time = '{}:{}'.format(now.hour, now.minute)
-    
-    df = df[df.barTime < bar_time]
-
     return df

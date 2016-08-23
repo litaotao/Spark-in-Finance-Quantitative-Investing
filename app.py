@@ -16,17 +16,8 @@ app.secret_key = 'ok, do u l0ve me ~^_ '
 api = Api(app)
 
 
-def get_line_data():
-    _dict = json.load(file('logs/latest.json', 'r'))
-    df = pd.DataFrame.from_dict(_dict)
-
-    return df
-
-
 class Main(Resource):
     def get(self): 
-        df = get_line_data()
-
         return Response(render_template('display.html'))
 
 
