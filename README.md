@@ -1,6 +1,10 @@
 # Spark-in-Finance-Quantitative-Investing
 
 
+*Feel free to give a star to my new repo, great thanks* [Awesome-FinTech](https://github.com/litaotao/Awesome-FinTech)
+
+
+
 ## Product 
 ***
 
